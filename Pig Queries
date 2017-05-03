@@ -1,0 +1,55 @@
+Pig
+
+1 a) Is the number of petitions with Data Engineer job title increasing over time?
+
+
+filter1 = foreach app generate $1,$4,$7;
+dataeng = filter filter1 by job_title =='DATA ENGINEER';
+groupby = GROUP dataeng by year;																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																														filter2=foreach groupby generate group,COUNT(dataeng.job_title);
+orderby = ORDER filter2 by $1 desc;
+
+
+
+
+4)Which top 5 employers file the most petitions each year?
+
+
+
+filter1 = foreach app generate $2,$6,$7;
+groupyear = GROUP filter1 by year;
+top5 = foreach groupyear{
+	remove1 = DISTINCT filter1;
+	orderbypetitions = order remove1 by prevailing_wage desc;
+	limit5 = limit orderbypetitions 5;
+	generate flatten(limit5);
+};
+
+
+6) Find the percentage and the count of each case status on total applications for each year. Create a graph depicting the pattern of All the cases over the period of time.
+
+
+filter1 = foreach app generate year,case_status;
+groupbyyear = GROUP filter1 by year;
+cunt = foreach groupbyyear generate $0,COUNT($1);
+
+9) Which are  employers along with the number of petitions who have the success rate more than 70%  in petitions and total petitions filed more than 1000?
+
+
+
+totalrecgrup = group app ALL;
+totalrec = foreach totalrecgrup generate COUNT(app.soc_name)as totalApplications;
+------------------------------------
+rec = foreach app generate employer_name,case_status;
+fil_suc = FILTER rec by case_status == 'CERTIFIED' or case_status == 'CERTIFIED-WITHDRAWN';
+rec1 = foreach fil_suc generate employer_name,case_status;
+groupby = group rec1 by employer_name;
+coutofEmplye = foreach groupby generate $0,COUNT(rec1.case_status) as cerftifiedApplications;
+
+perc = foreach coutofEmplye generate $0,(cerftifiedApplications/(double)totalrec.totalApplications)*100;
+
+odr = order perc by $1;
+lim = LIMIT odr 10;
+
+
+11) Export result for question no 10 to MySql database.
+
